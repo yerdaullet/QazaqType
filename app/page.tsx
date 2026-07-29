@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-type View = "home" | "lessons" | "trainer";
+type View = "home" | "lessons" | "trainer" | "results";
 type KeyDef = { label: string; value?: string; grow?: number; finger?: number };
 type Lesson = { id: number; title: string; subtitle: string; text: string; level: string };
+type ResultRecord = { id: string; title: string; date: string; seconds: number; cpm: number; accuracy: number; errors: number; lessonId?: number };
 
 const abaiTexts = [
   { title: "Он тоғызыншы қара сөз", text: "Адам ата-анадан туғанда есті болмайды: естіп, көріп, ұстап, татып ескерсе, дүниедегі жақсы, жаманды таниды." },
@@ -48,25 +49,28 @@ export default function App() {
   const [view, setView] = useState<View>("home");
   const [exercise, setExercise] = useState<{ title: string; text: string; lessonId?: number; abaiIndex?: number }>({ title: abaiTexts[0].title, text: abaiTexts[0].text, abaiIndex: 0 });
   const [completed, setCompleted] = useState<number[]>([]);
+  const [history, setHistory] = useState<ResultRecord[]>([]);
 
-  useEffect(() => { const saved = localStorage.getItem("qazaqtype-completed"); if (saved) setCompleted(JSON.parse(saved)); }, []);
+  useEffect(() => { const saved = localStorage.getItem("qazaqtype-completed"), savedHistory = localStorage.getItem("qazaqtype-history"); if (saved) setCompleted(JSON.parse(saved)); if (savedHistory) setHistory(JSON.parse(savedHistory)); }, []);
   const navigate = (next: View) => { setView(next); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const openLesson = (lesson: Lesson) => { setExercise({ title: lesson.title, text: lesson.text, lessonId: lesson.id }); navigate("trainer"); };
   const openAbai = (i = 0) => { setExercise({ title: abaiTexts[i].title, text: abaiTexts[i].text, abaiIndex: i }); navigate("trainer"); };
   const markComplete = (id?: number) => { if (!id) return; setCompleted(prev => { const next = [...new Set([...prev, id])]; localStorage.setItem("qazaqtype-completed", JSON.stringify(next)); return next; }); };
+  const saveResult = (result: Omit<ResultRecord, "id" | "date">) => { markComplete(result.lessonId); setHistory(prev => { const next = [{ ...result, id: crypto.randomUUID(), date: new Date().toISOString() }, ...prev].slice(0, 30); localStorage.setItem("qazaqtype-history", JSON.stringify(next)); return next; }); };
 
   return <main className="app-shell">
     <Header view={view} navigate={navigate} />
     {view === "home" && <Landing onStart={() => navigate("lessons")} onAbai={() => openAbai()} />}
     {view === "lessons" && <Lessons completed={completed} openLesson={openLesson} />}
-    {view === "trainer" && <Trainer exercise={exercise} onComplete={() => markComplete(exercise.lessonId)} onChooseAbai={openAbai} onLessons={() => navigate("lessons")} />}
+    {view === "trainer" && <Trainer exercise={exercise} onComplete={saveResult} onChooseAbai={openAbai} onLessons={() => navigate("lessons")} />}
+    {view === "results" && <Results history={history} completed={completed} onPractice={() => navigate("lessons")} />}
     <Footer navigate={navigate} />
   </main>;
 }
 
 function Header({ view, navigate }: { view: View; navigate: (view: View) => void }) {
   return <header className="topbar"><button className="brand" onClick={() => navigate("home")} aria-label="QazaqType басты беті"><span>Q</span>azaqType</button>
-    <nav>{([['home','Басты бет'],['lessons','Сабақтар'],['trainer','Тренажёр']] as [View,string][]).map(([id,label]) => <button key={id} onClick={() => navigate(id)} className={view === id ? "nav-active" : ""}>{label}</button>)}</nav>
+    <nav>{([['home','Басты бет'],['lessons','Сабақтар'],['trainer','Тренажёр'],['results','Нәтижелер']] as [View,string][]).map(([id,label]) => <button key={id} onClick={() => navigate(id)} className={view === id ? "nav-active" : ""}>{label}</button>)}</nav>
     <div className="header-actions"><span className="layout-badge">KZ</span><span className="header-note">Қазақша теру</span></div>
   </header>;
 }
@@ -94,14 +98,14 @@ function Lessons({ completed, openLesson }: { completed: number[]; openLesson: (
   </section>;
 }
 
-function Trainer({ exercise, onComplete, onChooseAbai, onLessons }: { exercise: { title:string; text:string; lessonId?:number; abaiIndex?:number }; onComplete:()=>void; onChooseAbai:(i:number)=>void; onLessons:()=>void }) {
+function Trainer({ exercise, onComplete, onChooseAbai, onLessons }: { exercise: { title:string; text:string; lessonId?:number; abaiIndex?:number }; onComplete:(result:Omit<ResultRecord,"id"|"date">)=>void; onChooseAbai:(i:number)=>void; onLessons:()=>void }) {
   const [index,setIndex]=useState(0), [errors,setErrors]=useState(0), [typed,setTyped]=useState(0), [seconds,setSeconds]=useState(0), [running,setRunning]=useState(false), [wrong,setWrong]=useState(false), [finished,setFinished]=useState(false);
   const [shiftHeld,setShiftHeld]=useState(false);
   const target=exercise.text, next=target[index]??" ";
   const activeFinger=useMemo(()=>{for(const row of rows)for(const key of row)if(key.value===next.toLowerCase())return key.finger??5;return 5;},[next]);
   const reset=useCallback(()=>{setIndex(0);setErrors(0);setTyped(0);setSeconds(0);setRunning(false);setWrong(false);setFinished(false);setShiftHeld(false);},[exercise]);
   useEffect(()=>reset(),[exercise,reset]);
-  const press=useCallback((char:string)=>{if(finished||char.length!==1)return;setRunning(true);setTyped(v=>v+1);const dashMatches=char==="-"&&next==="—";if(char===next||dashMatches){setWrong(false);if(index+1>=target.length){setRunning(false);setFinished(true);onComplete();}setIndex(v=>v+1);}else{setErrors(v=>v+1);setWrong(true);window.setTimeout(()=>setWrong(false),160);}},[finished,index,next,target.length,onComplete]);
+  const press=useCallback((char:string)=>{if(finished||char.length!==1)return;setRunning(true);setTyped(v=>v+1);const dashMatches=char==="-"&&next==="—";if(char===next||dashMatches){setWrong(false);if(index+1>=target.length){const finalSeconds=Math.max(1,seconds), finalTyped=typed+1;setRunning(false);setFinished(true);onComplete({title:exercise.title,seconds:finalSeconds,cpm:Math.round(target.length/finalSeconds*60),accuracy:Math.max(0,Math.round(((finalTyped-errors)/finalTyped)*100)),errors,lessonId:exercise.lessonId});}setIndex(v=>v+1);}else{setErrors(v=>v+1);setWrong(true);window.setTimeout(()=>setWrong(false),160);}},[finished,index,next,target.length,onComplete,seconds,typed,errors,exercise]);
   useEffect(()=>{const down=(e:KeyboardEvent)=>{if(e.key==="Shift"){setShiftHeld(true);return}if(e.key==="Escape"){reset();return}if(e.key.length===1){e.preventDefault();press(e.key)}};const up=(e:KeyboardEvent)=>{if(e.key==="Shift")setShiftHeld(false)};window.addEventListener("keydown",down);window.addEventListener("keyup",up);return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up)}},[press,reset]);
   useEffect(()=>{if(!running)return;const id=window.setInterval(()=>setSeconds(v=>v+1),1000);return()=>clearInterval(id)},[running]);
   const accuracy=typed?Math.max(0,Math.round(((typed-errors)/typed)*100)):100, cpm=seconds?Math.round(index/seconds*60):0, progress=Math.min(100,index/target.length*100);
@@ -116,4 +120,16 @@ function Trainer({ exercise, onComplete, onChooseAbai, onLessons }: { exercise: 
 }
 
 function Hand({side,active}:{side:"left"|"right";active:number}){const isActive=side==="left"?active<=5:active>=6;return <div className={`hand-wrap ${side}`} aria-hidden="true"><div className="hand-icon">☝</div><span className={isActive?"hand-dot active":"hand-dot"} style={{background:fingerColors[active]}}/><small>{isActive?fingerNames[active]:"Қолды бос ұстаңыз"}</small></div>}
-function Footer({navigate}:{navigate:(v:View)=>void}){return <footer><div className="page-width"><button className="brand" onClick={()=>navigate("home")}><span>Q</span>azaqType</button><p>Қазақша жылдам әрі сауатты теруге арналған жаттықтырғыш.</p><div><button onClick={()=>navigate("home")}>Басты бет</button><button onClick={()=>navigate("lessons")}>Сабақтар</button><button onClick={()=>navigate("trainer")}>Тренажёр</button></div><small>© 2026 QazaqType · Қазақ тілі үшін жасалды</small></div></footer>}
+
+function Results({history,completed,onPractice}:{history:ResultRecord[];completed:number[];onPractice:()=>void}){
+  const best=history.length?Math.max(...history.map(r=>r.cpm)):0, average=history.length?Math.round(history.reduce((s,r)=>s+r.accuracy,0)/history.length):0, minutes=Math.round(history.reduce((s,r)=>s+r.seconds,0)/60);
+  const chart=[...history].slice(0,10).reverse(), max=Math.max(100,...chart.map(r=>r.cpm));
+  return <section className="results-page page-width"><div className="results-head"><div><p className="eyebrow">ЖЕКЕ ПРОГРЕСС</p><h1>Нәтижелер</h1><p>Әр жаттығудан кейінгі көрсеткіштеріңіз осы құрылғыда сақталады.</p></div><button className="cta" onClick={onPractice}>Жаттығуды жалғастыру →</button></div>
+    <div className="summary-grid"><article><span>ЖЕКЕ РЕКОРД</span><b>{best}</b><small>таңба / минут</small><i>↗</i></article><article><span>ОРТАША ДӘЛДІК</span><b>{average}%</b><small>{history.length} жаттығу бойынша</small><i>◎</i></article><article><span>ЖАТТЫҒУ УАҚЫТЫ</span><b>{minutes}</b><small>минут барлығы</small><i>◷</i></article><article><span>АЯҚТАЛҒАН САБАҚ</span><b>{completed.length}<em>/12</em></b><small>оқу бағдарламасы</small><i>✓</i></article></div>
+    <div className="results-layout"><section className="chart-card"><div className="panel-title"><div><h2>Жылдамдық динамикасы</h2><p>Соңғы 10 жаттығу · таңба/минут</p></div><span>{chart.length ? `+${Math.max(0,chart[chart.length-1].cpm-(chart[0]?.cpm||0))}` : "—"}</span></div>{chart.length?<div className="bar-chart">{chart.map((r,i)=><div className="chart-column" key={r.id}><b>{r.cpm}</b><i style={{height:`${Math.max(8,r.cpm/max*100)}%`}} className={i===chart.length-1?"latest":""}/><small>{i+1}</small></div>)}</div>:<EmptyState onPractice={onPractice}/>}</section>
+      <section className="goal-card"><p className="eyebrow">КЕЛЕСІ МАҚСАТ</p><h2>{best<150?"150 таңба/мин":"95% дәлдік"}</h2><p>{best<150?"Жылдамдықты тұрақты ырғақпен арттырыңыз.":"Жылдамдықты сақтап, қателерді азайтыңыз."}</p><div className="goal-track"><i style={{width:`${best<150?Math.min(100,best/150*100):Math.min(100,average/95*100)}%`}}/></div><span>{best<150?`${best} / 150 таң/мин`:`${average}% / 95%`}</span><button onClick={onPractice}>Сабақты таңдау</button></section></div>
+    <section className="history-card"><div className="panel-title"><div><h2>Соңғы жаттығулар</h2><p>Сіздің теру тарихыңыз</p></div></div>{history.length?<div className="history-table"><div className="history-row header"><span>Жаттығу</span><span>Күні</span><span>Уақыт</span><span>Жылдамдық</span><span>Дәлдік</span></div>{history.slice(0,8).map(r=><div className="history-row" key={r.id}><span><i>{r.lessonId?"S":"A"}</i><b>{r.title}</b></span><span>{new Intl.DateTimeFormat("kk-KZ",{day:"2-digit",month:"short"}).format(new Date(r.date))}</span><span>{formatTime(r.seconds)}</span><span><b>{r.cpm}</b> таң/мин</span><span className={r.accuracy>=90?"good":"warn"}>{r.accuracy}%</span></div>)}</div>:<EmptyState onPractice={onPractice}/>}</section>
+  </section>
+}
+function EmptyState({onPractice}:{onPractice:()=>void}){return <div className="empty-state"><span>⌨</span><h3>Әзірге нәтиже жоқ</h3><p>Алғашқы жаттығуды аяқтағаннан кейін прогрессіңіз осында көрінеді.</p><button onClick={onPractice}>Алғашқы сабақты бастау</button></div>}
+function Footer({navigate}:{navigate:(v:View)=>void}){return <footer><div className="page-width"><button className="brand" onClick={()=>navigate("home")}><span>Q</span>azaqType</button><p>Қазақша жылдам әрі сауатты теруге арналған жаттықтырғыш.</p><div><button onClick={()=>navigate("home")}>Басты бет</button><button onClick={()=>navigate("lessons")}>Сабақтар</button><button onClick={()=>navigate("trainer")}>Тренажёр</button><button onClick={()=>navigate("results")}>Нәтижелер</button></div><small>© 2026 QazaqType · Қазақ тілі үшін жасалды</small></div></footer>}
