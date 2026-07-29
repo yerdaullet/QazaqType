@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-type View = "home" | "lessons" | "trainer" | "results";
+type View = "home" | "lessons" | "trainer" | "speed" | "results";
 type KeyDef = { label: string; value?: string; grow?: number; finger?: number };
 type Lesson = { id: number; title: string; subtitle: string; text: string; level: string };
 type ResultRecord = { id: string; title: string; date: string; seconds: number; cpm: number; accuracy: number; errors: number; mistakeKeys?: Record<string,number>; lessonId?: number };
@@ -64,6 +64,7 @@ export default function App() {
     {view === "home" && <Landing onStart={() => navigate("lessons")} onAbai={() => openAbai()} />}
     {view === "lessons" && <Lessons completed={completed} openLesson={openLesson} />}
     {view === "trainer" && <Trainer exercise={exercise} onComplete={saveResult} onChooseAbai={openAbai} onLessons={() => navigate("lessons")} />}
+    {view === "speed" && <SpeedTest onComplete={saveResult} onResults={() => navigate("results")} />}
     {view === "results" && <Results history={history} completed={completed} onPractice={() => navigate("lessons")} onWeakPractice={openWeakPractice} />}
     <Footer navigate={navigate} />
   </main>;
@@ -71,7 +72,7 @@ export default function App() {
 
 function Header({ view, navigate }: { view: View; navigate: (view: View) => void }) {
   return <header className="topbar"><button className="brand" onClick={() => navigate("home")} aria-label="QazaqType басты беті"><span>Q</span>azaqType</button>
-    <nav>{([['home','Басты бет'],['lessons','Сабақтар'],['trainer','Тренажёр'],['results','Нәтижелер']] as [View,string][]).map(([id,label]) => <button key={id} onClick={() => navigate(id)} className={view === id ? "nav-active" : ""}>{label}</button>)}</nav>
+    <nav>{([['home','Басты бет'],['lessons','Сабақтар'],['trainer','Тренажёр'],['speed','Сынақ'],['results','Нәтижелер']] as [View,string][]).map(([id,label]) => <button key={id} onClick={() => navigate(id)} className={view === id ? "nav-active" : ""}>{label}</button>)}</nav>
     <div className="header-actions"><span className="layout-badge">KZ</span><span className="header-note">Қазақша теру</span></div>
   </header>;
 }
@@ -123,6 +124,24 @@ function Trainer({ exercise, onComplete, onChooseAbai, onLessons }: { exercise: 
 
 function Hand({side,active}:{side:"left"|"right";active:number}){const isActive=side==="left"?active<=5:active>=6;return <div className={`hand-wrap ${side}`} aria-hidden="true"><div className="hand-icon">☝</div><span className={isActive?"hand-dot active":"hand-dot"} style={{background:fingerColors[active]}}/><small>{isActive?fingerNames[active]:"Қолды бос ұстаңыз"}</small></div>}
 
+const speedText = ("Қазақстан — тәуелсіз, болашағы жарқын мемлекет. Білім мен еңбек адамды биік мақсаттарға жетелейді. Қазақ тілі — халқымыздың рухани қазынасы. Жылдам әрі сауатты теру ойды еркін жеткізуге көмектеседі. Адам күн сайын ізденіп, өз шеберлігін дамытады. Талап, еңбек, терең ой — адамды алға бастайтын асыл қасиеттер. ").repeat(10);
+function SpeedTest({onComplete,onResults}:{onComplete:(result:Omit<ResultRecord,"id"|"date">)=>void;onResults:()=>void}){
+  const [duration,setDuration]=useState(60),[remaining,setRemaining]=useState(60),[index,setIndex]=useState(0),[typed,setTyped]=useState(0),[errors,setErrors]=useState(0),[mistakes,setMistakes]=useState<Record<string,number>>({}),[running,setRunning]=useState(false),[finished,setFinished]=useState(false),[wrong,setWrong]=useState(false);const saved=useRef(false);
+  const elapsed=Math.max(1,duration-remaining), accuracy=typed?Math.max(0,Math.round((typed-errors)/typed*100)):100, cpm=Math.round(index/elapsed*60);
+  const reset=useCallback((seconds=duration)=>{setDuration(seconds);setRemaining(seconds);setIndex(0);setTyped(0);setErrors(0);setMistakes({});setRunning(false);setFinished(false);setWrong(false);saved.current=false},[duration]);
+  useEffect(()=>{if(!running)return;const timer=window.setInterval(()=>setRemaining(v=>{if(v<=1){setRunning(false);setFinished(true);return 0}return v-1}),1000);return()=>clearInterval(timer)},[running]);
+  useEffect(()=>{if(!finished||saved.current)return;saved.current=true;onComplete({title:`${duration} секундтық жылдамдық сынағы`,seconds:elapsed,cpm,accuracy,errors,mistakeKeys:mistakes})},[finished,duration,elapsed,cpm,accuracy,errors,mistakes,onComplete]);
+  const press=useCallback((char:string)=>{if(finished||char.length!==1)return;setRunning(true);setTyped(v=>v+1);const next=speedText[index];if(char===next||(char==="-"&&next==="—")){setIndex(v=>v+1);setWrong(false)}else{setErrors(v=>v+1);setMistakes(prev=>({...prev,[next.toLowerCase()]:(prev[next.toLowerCase()]||0)+1}));setWrong(true);window.setTimeout(()=>setWrong(false),140)}},[finished,index]);
+  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==="Escape"){reset();return}if(e.key.length===1){e.preventDefault();press(e.key)}};window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key)},[press,reset]);
+  return <section className="speed-page page-width"><div className="speed-head"><div><p className="eyebrow">ЖЫЛДАМДЫҚ СЫНАУЫ</p><h1>Қаншалықты жылдам тересіз?</h1><p>Уақытты таңдаңыз. Таймер алғашқы пернеден кейін автоматты басталады.</p></div><div className={`countdown ${remaining<=10&&running?"urgent":""}`}><span>ҚАЛҒАН УАҚЫТ</span><b>{formatTime(remaining)}</b></div></div>
+    <div className="duration-tabs">{[30,60,120].map(s=><button key={s} disabled={running} className={duration===s?"selected":""} onClick={()=>reset(s)}>{s<60?`${s} секунд`:`${s/60} минут`}</button>)}</div>
+    <div className="speed-stats"><div><span>ЖЫЛДАМДЫҚ</span><b>{cpm}</b><small>таң/мин</small></div><div><span>ДӘЛДІК</span><b>{accuracy}%</b><small>қатесіз теру</small></div><div><span>ҚАТЕ</span><b>{errors}</b><small>рет</small></div><div><span>ТЕРІЛДІ</span><b>{index}</b><small>таңба</small></div></div>
+    <section className={`speed-typebox ${wrong?"shake":""}`}><div className="speed-copy"><span>{speedText.slice(Math.max(0,index-55),index)}</span><mark>{speedText[index]}</mark><b>{speedText.slice(index+1,index+180)}</b></div><div className="speed-help"><span className={running?"live-dot active":"live-dot"}/>{running?"Сынақ жүріп жатыр":"Теруді бастаңыз"}<kbd>Esc</kbd> қайта бастау</div></section>
+    <div className="test-tips"><div><i>01</i><b>Экранға қараңыз</b><p>Пернетақтаға қарамай, мәтінге назар аударыңыз.</p></div><div><i>02</i><b>Ырғақты сақтаңыз</b><p>Біркелкі жылдамдық жоғары нәтижеге жеткізеді.</p></div><div><i>03</i><b>Дәлдік маңызды</b><p>Алдымен қатесіз, содан кейін жылдам теріңіз.</p></div></div>
+    {finished&&<div className="modal-backdrop"><section className="result-modal"><div className="trophy">↗</div><p className="eyebrow">СЫНАҚ АЯҚТАЛДЫ</p><h2>{cpm>=180?"Тамаша нәтиже!":cpm>=100?"Жақсы нәтиже!":"Жаттығуды жалғастырыңыз!"}</h2><p className="result-copy">Нәтижеңіз жеке статистикаға сақталды.</p><div className="result-grid"><div><span>{cpm}</span><small>Таң/мин</small></div><div><span>{accuracy}%</span><small>Дәлдік</small></div><div><span>{errors}</span><small>Қате</small></div></div><div className="modal-actions"><button onClick={()=>reset()}>Қайта сынау</button><button className="primary" onClick={onResults}>Нәтижелерді көру →</button></div></section></div>}
+  </section>
+}
+
 function Results({history,completed,onPractice,onWeakPractice}:{history:ResultRecord[];completed:number[];onPractice:()=>void;onWeakPractice:(letters:string[])=>void}){
   const best=history.length?Math.max(...history.map(r=>r.cpm)):0, average=history.length?Math.round(history.reduce((s,r)=>s+r.accuracy,0)/history.length):0, minutes=Math.round(history.reduce((s,r)=>s+r.seconds,0)/60);
   const chart=[...history].slice(0,10).reverse(), max=Math.max(100,...chart.map(r=>r.cpm));
@@ -138,4 +157,4 @@ function Results({history,completed,onPractice,onWeakPractice}:{history:ResultRe
   </section>
 }
 function EmptyState({onPractice}:{onPractice:()=>void}){return <div className="empty-state"><span>⌨</span><h3>Әзірге нәтиже жоқ</h3><p>Алғашқы жаттығуды аяқтағаннан кейін прогрессіңіз осында көрінеді.</p><button onClick={onPractice}>Алғашқы сабақты бастау</button></div>}
-function Footer({navigate}:{navigate:(v:View)=>void}){return <footer><div className="page-width"><button className="brand" onClick={()=>navigate("home")}><span>Q</span>azaqType</button><p>Қазақша жылдам әрі сауатты теруге арналған жаттықтырғыш.</p><div><button onClick={()=>navigate("home")}>Басты бет</button><button onClick={()=>navigate("lessons")}>Сабақтар</button><button onClick={()=>navigate("trainer")}>Тренажёр</button><button onClick={()=>navigate("results")}>Нәтижелер</button></div><small>© 2026 QazaqType · Қазақ тілі үшін жасалды</small></div></footer>}
+function Footer({navigate}:{navigate:(v:View)=>void}){return <footer><div className="page-width"><button className="brand" onClick={()=>navigate("home")}><span>Q</span>azaqType</button><p>Қазақша жылдам әрі сауатты теруге арналған жаттықтырғыш.</p><div><button onClick={()=>navigate("home")}>Басты бет</button><button onClick={()=>navigate("lessons")}>Сабақтар</button><button onClick={()=>navigate("trainer")}>Тренажёр</button><button onClick={()=>navigate("speed")}>Сынақ</button><button onClick={()=>navigate("results")}>Нәтижелер</button></div><small>© 2026 QazaqType · Қазақ тілі үшін жасалды</small></div></footer>}
