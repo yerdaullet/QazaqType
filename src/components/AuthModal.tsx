@@ -21,18 +21,11 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
     else onClose();
   };
 
-  const google = async () => {
-    if (!supabase) return;
-    await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
-  };
-
   return <div className="modal-backdrop"><section className="auth-modal" role="dialog" aria-modal="true">
     <button className="close" onClick={onClose}>×</button>
     <div className="auth-logo"><span>Q</span></div>
     <p className="eyebrow">ЖЕКЕ КАБИНЕТ</p><h2>{mode === "login" ? "Қайта оралуыңызбен!" : "QazaqType-қа қосылыңыз"}</h2>
     <p className="auth-lead">Прогрессіңізді барлық құрылғыда сақтаңыз.</p>
-    <button className="google-button" onClick={google}><b>G</b> Google арқылы жалғастыру</button>
-    <div className="auth-divider"><span>немесе email</span></div>
     <form onSubmit={submit}>{mode === "signup" && <label>Атыңыз<input value={name} onChange={e=>setName(e.target.value)} required placeholder="Аты-жөніңіз" /></label>}
       <label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required placeholder="name@example.com" /></label>
       <label>Құпиясөз<input type="password" minLength={6} value={password} onChange={e=>setPassword(e.target.value)} required placeholder="Кемінде 6 таңба" /></label>
