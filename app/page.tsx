@@ -1,8 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import { AccountPage, type CloudProfile } from "../src/components/AccountPage";
+import { AuthModal } from "../src/components/AuthModal";
+import { cloudEnabled, supabase } from "../src/lib/supabase";
 
-type View = "home" | "lessons" | "trainer" | "speed" | "results";
+type View = "home" | "lessons" | "trainer" | "speed" | "results" | "account";
 type KeyDef = { label: string; value?: string; grow?: number; finger?: number };
 type Lesson = { id: number; title: string; subtitle: string; text: string; level: string };
 type ResultRecord = { id: string; title: string; date: string; seconds: number; cpm: number; accuracy: number; errors: number; mistakeKeys?: Record<string,number>; lessonId?: number };
@@ -63,31 +67,87 @@ export default function App() {
   const [exercise, setExercise] = useState<{ title: string; text: string; lessonId?: number; abaiIndex?: number }>({ title: abaiTexts[0].title, text: abaiTexts[0].text, abaiIndex: 0 });
   const [completed, setCompleted] = useState<number[]>([]);
   const [history, setHistory] = useState<ResultRecord[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<CloudProfile | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [cloudState, setCloudState] = useState<"local" | "syncing" | "synced">("local");
 
   useEffect(() => { const saved = localStorage.getItem("qazaqtype-completed"), savedHistory = localStorage.getItem("qazaqtype-history"); if (saved) setCompleted(JSON.parse(saved)); if (savedHistory) setHistory(JSON.parse(savedHistory)); }, []);
+  useEffect(() => {
+    if (!supabase) return;
+    void supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
+    return () => subscription.unsubscribe();
+  }, []);
+  useEffect(() => {
+    const client = supabase;
+    if (!client || !user) { setProfile(null); setCloudState("local"); return; }
+    let active = true;
+    const hydrate = async () => {
+      setCloudState("syncing");
+      const profileQuery = await client.from("profiles").select("id,full_name,role,daily_goal").eq("id", user.id).single();
+      if (active && profileQuery.data) setProfile(profileQuery.data as CloudProfile);
+      const migrationKey = `qazaqtype-cloud-migrated-${user.id}`;
+      if (!localStorage.getItem(migrationKey)) {
+        const local = JSON.parse(localStorage.getItem("qazaqtype-history") || "[]") as ResultRecord[];
+        if (local.length) {
+          const { error } = await client.from("results").insert(local.map(result => ({ user_id: user.id, title: result.title, lesson_id: result.lessonId ?? null, seconds: result.seconds, cpm: result.cpm, accuracy: result.accuracy, errors: result.errors, mistake_keys: result.mistakeKeys ?? {}, created_at: result.date })));
+          if (!error) localStorage.setItem(migrationKey, "1");
+        } else localStorage.setItem(migrationKey, "1");
+      }
+      const { data } = await client.from("results").select("id,title,lesson_id,seconds,cpm,accuracy,errors,mistake_keys,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100);
+      if (active && data) {
+        const cloudHistory: ResultRecord[] = data.map(row => ({ id: row.id, title: row.title, lessonId: row.lesson_id ?? undefined, seconds: row.seconds, cpm: row.cpm, accuracy: row.accuracy, errors: row.errors, mistakeKeys: (row.mistake_keys ?? {}) as Record<string, number>, date: row.created_at }));
+        setHistory(cloudHistory);
+        localStorage.setItem("qazaqtype-history", JSON.stringify(cloudHistory.slice(0, 30)));
+        const cloudCompleted = cloudHistory.flatMap(result => result.lessonId ? [result.lessonId] : []);
+        setCompleted(previous => { const next = [...new Set([...previous, ...cloudCompleted])]; localStorage.setItem("qazaqtype-completed", JSON.stringify(next)); return next; });
+        setCloudState("synced");
+      }
+    };
+    void hydrate();
+    return () => { active = false; };
+  }, [user]);
   const navigate = (next: View) => { setView(next); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const openLesson = (lesson: Lesson) => { setExercise({ title: lesson.title, text: lesson.text, lessonId: lesson.id }); navigate("trainer"); };
+  const openLessonById = (id: number) => { const lesson = lessonGroups.flatMap(group => group.lessons).find(item => item.id === id); if (lesson) openLesson(lesson); };
   const openAbai = (i = 0) => { setExercise({ title: abaiTexts[i].title, text: abaiTexts[i].text, abaiIndex: i }); navigate("trainer"); };
   const openWeakPractice = (letters: string[]) => { const clean = letters.length ? letters : ["ә","і","ң","ғ","ү","ұ","қ","ө","һ"]; const words = clean.flatMap(letter => [letter.repeat(3), `${letter}а${letter}`, `а${letter}а`, `${letter}е${letter}`]); setExercise({ title: "Қиын әріптер жаттығуы", text: words.join(" ") }); navigate("trainer"); };
   const markComplete = (id?: number) => { if (!id) return; setCompleted(prev => { const next = [...new Set([...prev, id])]; localStorage.setItem("qazaqtype-completed", JSON.stringify(next)); return next; }); };
-  const saveResult = (result: Omit<ResultRecord, "id" | "date">) => { markComplete(result.lessonId); setHistory(prev => { const next = [{ ...result, id: crypto.randomUUID(), date: new Date().toISOString() }, ...prev].slice(0, 30); localStorage.setItem("qazaqtype-history", JSON.stringify(next)); return next; }); };
+  const saveResult = (result: Omit<ResultRecord, "id" | "date">) => {
+    const record = { ...result, id: crypto.randomUUID(), date: new Date().toISOString() };
+    markComplete(result.lessonId);
+    setHistory(prev => { const next = [record, ...prev].slice(0, 100); localStorage.setItem("qazaqtype-history", JSON.stringify(next.slice(0, 30))); return next; });
+    if (supabase && user) {
+      setCloudState("syncing");
+      void supabase.from("results").insert({ user_id: user.id, title: record.title, lesson_id: record.lessonId ?? null, seconds: record.seconds, cpm: record.cpm, accuracy: record.accuracy, errors: record.errors, mistake_keys: record.mistakeKeys ?? {}, created_at: record.date }).then(({ error }) => setCloudState(error ? "local" : "synced"));
+    }
+  };
+  const signOut = async () => { if (supabase) await supabase.auth.signOut(); setUser(null); setProfile(null); navigate("home"); };
+  const accountAction = () => { if (user) navigate("account"); else if (cloudEnabled) setAuthOpen(true); else navigate("account"); };
 
   return <main className="app-shell">
-    <Header view={view} navigate={navigate} />
+    <Header view={view} navigate={navigate} user={user} profile={profile} cloudState={cloudState} onAccount={accountAction} />
     {view === "home" && <Landing onStart={() => navigate("lessons")} onAbai={() => openAbai()} />}
     {view === "lessons" && <Lessons completed={completed} history={history} openLesson={openLesson} />}
     {view === "trainer" && <Trainer exercise={exercise} onComplete={saveResult} onChooseAbai={openAbai} onLessons={() => navigate("lessons")} />}
     {view === "speed" && <SpeedTest onComplete={saveResult} onResults={() => navigate("results")} />}
     {view === "results" && <Results history={history} completed={completed} onPractice={() => navigate("lessons")} onWeakPractice={openWeakPractice} />}
+    {view === "account" && (user && profile ? <AccountPage user={user} profile={profile} results={history} completedCount={completed.length} onProfile={setProfile} onSignOut={signOut} onLesson={openLessonById} /> : <CloudSetup onLogin={() => cloudEnabled ? setAuthOpen(true) : undefined} />)}
     <Footer navigate={navigate} />
+    {authOpen && cloudEnabled && <AuthModal onClose={() => setAuthOpen(false)} />}
   </main>;
 }
 
-function Header({ view, navigate }: { view: View; navigate: (view: View) => void }) {
+function Header({ view, navigate, user, profile, cloudState, onAccount }: { view: View; navigate: (view: View) => void; user: User | null; profile: CloudProfile | null; cloudState: "local" | "syncing" | "synced"; onAccount: () => void }) {
   return <header className="topbar"><button className="brand" onClick={() => navigate("home")} aria-label="QazaqType басты беті"><span>Q</span>azaqType</button>
     <nav>{([['home','Басты бет'],['lessons','Сабақтар'],['trainer','Тренажёр'],['speed','Сынақ'],['results','Нәтижелер']] as [View,string][]).map(([id,label]) => <button key={id} onClick={() => navigate(id)} className={view === id ? "nav-active" : ""}>{label}</button>)}</nav>
-    <div className="header-actions"><span className="layout-badge">KZ</span><span className="header-note">Қазақша теру</span></div>
+    <div className="header-actions"><span className={`cloud-dot ${cloudState}`} title={cloudState === "synced" ? "Прогресс бұлтта сақталды" : cloudState === "syncing" ? "Сақталуда" : "Осы құрылғыда сақталады"}/><span className="layout-badge">KZ</span><button className={`account-button ${view === "account" ? "active" : ""}`} onClick={onAccount}><i>{profile?.full_name?.[0]?.toUpperCase() || (user ? "Q" : "↗")}</i><span>{profile?.full_name || "Кіру"}</span></button></div>
   </header>;
+}
+
+function CloudSetup({ onLogin }: { onLogin: () => void }) {
+  return <section className="cloud-setup page-width"><div><span>☁</span><p className="eyebrow">ЖЕКЕ КАБИНЕТ</p><h1>Прогресті жоғалтпаңыз</h1><p>Аккаунт арқылы нәтижелер барлық құрылғыда сақталады. Мұғалім сынып ашып, оқушыларға сабақ тағайындай алады.</p>{cloudEnabled ? <button className="cta" onClick={onLogin}>Кіру немесе тіркелу →</button> : <div className="setup-note"><b>Бұлттық база қосылмаған</b><span>Supabase параметрлерін Vercel ортасына енгізгеннен кейін тіркелу ашылады. Сабақтар мен жергілікті прогресс қазір де толық жұмыс істейді.</span></div>}</div></section>;
 }
 
 function Landing({ onStart, onAbai }: { onStart: () => void; onAbai: () => void }) {
