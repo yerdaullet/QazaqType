@@ -15,6 +15,9 @@ const abaiTexts = [
   { title: "Он тоғызыншы қара сөз", text: "Адам ата-анадан туғанда есті болмайды: естіп, көріп, ұстап, татып ескерсе, дүниедегі жақсы, жаманды таниды." },
   { title: "Отыз бірінші қара сөз", text: "Естіген нәрсені ұмытпастыққа төрт түрлі себеп бар: әуелі — көкірегі байлаулы берік болмақ керек." },
   { title: "Отыз сегізінші қара сөз", text: "Ғылым-білімді әуел бастан бала өзі ізденіп таппайды. Басында зорлықпенен яки алдауменен үйір қылу керек." },
+  { title: "Жетінші қара сөз", text: "Жас бала анадан туғанда екі түрлі мінезбен туады: біреуі — ішсем, жесем, ұйықтасам деп тұрады." },
+  { title: "Ғылым таппай мақтанба", text: "Ғылым таппай мақтанба, орын таппай баптанба, құмарланып шаттанба, ойнап босқа күлуге." },
+  { title: "Дүниеге кірпіш болып қалан", text: "Сен де бір кірпіш дүниеге, кетігін тап та, бар қалан!" },
 ];
 
 const lessonGroups: { title: string; description: string; lessons: Lesson[] }[] = [
@@ -47,6 +50,24 @@ const lessonGroups: { title: string; description: string; lessons: Lesson[] }[] 
     { id: 18, title: "Іскерлік мәтін", subtitle: "Ресми стиль", text: "Жобаның негізгі мақсаты — қазақ тіліндегі цифрлық сауаттылықты дамыту.", level: "Қиын" },
     { id: 19, title: "Жылдамдық 200", subtitle: "Тұрақты ырғақ", text: "еңбек білім талап ой еңбек білім талап ой еңбек білім талап ой", level: "Шебер" },
     { id: 20, title: "Қорытынды емтихан", subtitle: "Толық бағдарлама", text: "Қазақстанның болашағы — білімді, еңбекқор және отаншыл жастардың қолында. Әр күнгі ізденіс үлкен жетістікке бастайды!", level: "Шебер" },
+  ]},
+  { title: "Қазақ әріптерінің арнайы курсы", description: "Қазақ тіліне тән тоғыз әріпті жеке-жеке бекітіп, перне орнын есте сақтаңыз.", lessons: [
+    { id: 21, title: "Ә және І", subtitle: "Сол жақ шынашақ", text: "ә і ә і әлем ілім әсем әділ білім тәлім", level: "Жеңіл" },
+    { id: 22, title: "Ң және Ғ", subtitle: "Жоғарғы қатар", text: "ң ғ аң шаң ғарыш ғылым жаңғырық қоңыр", level: "Орташа" },
+    { id: 23, title: "Ү Ұ Қ", subtitle: "Оң қол", text: "ү ұ қ күн құс ұлт үлкен құқық құдық", level: "Орташа" },
+    { id: 24, title: "Ө және Һ", subtitle: "Оң шынашақ", text: "ө һ өмір өнер көктем қаһарман гауһар", level: "Орташа" },
+  ]},
+  { title: "Әдебиет және диктант", description: "Мақал-мәтел, өлең және мазмұнды қазақша мәтіндер арқылы сауатты теріңіз.", lessons: [
+    { id: 25, title: "Бес асыл іс", subtitle: "Абай өлеңі", text: "Талап, еңбек, терең ой, қанағат, рақым — ойлап қой, бес асыл іс, көнсеңіз.", level: "Қиын" },
+    { id: 26, title: "Отан", subtitle: "Тақырыптық диктант", text: "Отанды сүю отбасынан басталады. Туған тіл мен туған жер — елдіктің негізі.", level: "Қиын" },
+    { id: 27, title: "Еңбек пен білім", subtitle: "Мақалдар жинағы", text: "Еңбек түбі — береке. Білекті бірді жығар, білімді мыңды жығар.", level: "Қиын" },
+    { id: 28, title: "Цифрлық Қазақстан", subtitle: "Заманауи мәтін", text: "Цифрлық сауаттылық ақпаратты жылдам тауып, оны дұрыс қолданып, қауіпсіз бөлісуге үйретеді.", level: "Шебер" },
+  ]},
+  { title: "Емтихан режимі", description: "Ұзақ мәтін, дәлдік және жылдамдықты бір уақытта сынайтын қорытынды жаттығулар.", lessons: [
+    { id: 29, title: "Дәлдік емтиханы", subtitle: "Қатесіз теру", text: "Асықпай, әр таңбаны дәл теріңіз: әдеп, ізгілік, жауапкершілік, ұқыптылық және өнер.", level: "Шебер" },
+    { id: 30, title: "Жылдамдық емтиханы", subtitle: "Тұрақты қарқын", text: "қазақ тілі білім еңбек талап қазақ тілі білім еңбек талап қазақ тілі білім еңбек талап", level: "Шебер" },
+    { id: 31, title: "Аралас емтихан", subtitle: "Әріп, сан, белгі", text: "QazaqType: 32 сабақ, 100% ынта және күн сайын 15 минут жаттығу!", level: "Шебер" },
+    { id: 32, title: "Үлкен финал", subtitle: "Толық мәтін", text: "Білімді ұрпақ ана тілін құрметтейді, технологияны меңгереді және алған білімін елдің дамуына жұмсайды. Бүгінгі тұрақты еңбек — ертеңгі үлкен жеңіс.", level: "Шебер" },
   ]},
 ];
 const totalLessonCount = lessonGroups.flatMap(group => group.lessons).length;
@@ -100,7 +121,7 @@ export default function App() {
         const cloudHistory: ResultRecord[] = data.map(row => ({ id: row.id, title: row.title, lessonId: row.lesson_id ?? undefined, seconds: row.seconds, cpm: row.cpm, accuracy: row.accuracy, errors: row.errors, mistakeKeys: (row.mistake_keys ?? {}) as Record<string, number>, date: row.created_at }));
         setHistory(cloudHistory);
         localStorage.setItem("qazaqtype-history", JSON.stringify(cloudHistory.slice(0, 30)));
-        const cloudCompleted = cloudHistory.flatMap(result => result.lessonId ? [result.lessonId] : []);
+        const cloudCompleted = cloudHistory.flatMap(result => result.lessonId && !result.title.startsWith("✎") ? [result.lessonId] : []);
         setCompleted(previous => { const next = [...new Set([...previous, ...cloudCompleted])]; localStorage.setItem("qazaqtype-completed", JSON.stringify(next)); return next; });
         setCloudState("synced");
       }
@@ -111,12 +132,13 @@ export default function App() {
   const navigate = (next: View) => { setView(next); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const openLesson = (lesson: Lesson) => { setExercise({ title: lesson.title, text: lesson.text, lessonId: lesson.id }); navigate("trainer"); };
   const openLessonById = (id: number) => { const lesson = lessonGroups.flatMap(group => group.lessons).find(item => item.id === id); if (lesson) openLesson(lesson); };
+  const openCustomLesson = (title: string, text: string, lessonId: number) => { setExercise({ title, text, lessonId }); navigate("trainer"); };
   const openAbai = (i = 0) => { setExercise({ title: abaiTexts[i].title, text: abaiTexts[i].text, abaiIndex: i }); navigate("trainer"); };
   const openWeakPractice = (letters: string[]) => { const clean = letters.length ? letters : ["ә","і","ң","ғ","ү","ұ","қ","ө","һ"]; const words = clean.flatMap(letter => [letter.repeat(3), `${letter}а${letter}`, `а${letter}а`, `${letter}е${letter}`]); setExercise({ title: "Қиын әріптер жаттығуы", text: words.join(" ") }); navigate("trainer"); };
   const markComplete = (id?: number) => { if (!id) return; setCompleted(prev => { const next = [...new Set([...prev, id])]; localStorage.setItem("qazaqtype-completed", JSON.stringify(next)); return next; }); };
   const saveResult = (result: Omit<ResultRecord, "id" | "date">) => {
     const record = { ...result, id: crypto.randomUUID(), date: new Date().toISOString() };
-    markComplete(result.lessonId);
+    if (!result.title.startsWith("✎")) markComplete(result.lessonId);
     setHistory(prev => { const next = [record, ...prev].slice(0, 100); localStorage.setItem("qazaqtype-history", JSON.stringify(next.slice(0, 30))); return next; });
     if (supabase && user) {
       setCloudState("syncing");
@@ -133,7 +155,7 @@ export default function App() {
     {view === "trainer" && <Trainer exercise={exercise} onComplete={saveResult} onChooseAbai={openAbai} onLessons={() => navigate("lessons")} />}
     {view === "speed" && <SpeedTest onComplete={saveResult} onResults={() => navigate("results")} />}
     {view === "results" && <Results history={history} completed={completed} onPractice={() => navigate("lessons")} onWeakPractice={openWeakPractice} />}
-    {view === "account" && (user && profile ? <AccountPage user={user} profile={profile} results={history} completedCount={completed.length} onProfile={setProfile} onSignOut={signOut} onLesson={openLessonById} /> : <CloudSetup onLogin={() => cloudEnabled ? setAuthOpen(true) : undefined} />)}
+    {view === "account" && (user && profile ? <AccountPage user={user} profile={profile} results={history} completedCount={completed.length} onProfile={setProfile} onSignOut={signOut} onLesson={openLessonById} onCustomLesson={openCustomLesson} onHistoryCleared={() => { setHistory([]); setCompleted([]); }} /> : <CloudSetup onLogin={() => cloudEnabled ? setAuthOpen(true) : undefined} />)}
     <Footer navigate={navigate} />
     {authOpen && cloudEnabled && <AuthModal onClose={() => setAuthOpen(false)} />}
   </main>;
@@ -142,7 +164,7 @@ export default function App() {
 function Header({ view, navigate, user, profile, cloudState, onAccount }: { view: View; navigate: (view: View) => void; user: User | null; profile: CloudProfile | null; cloudState: "local" | "syncing" | "synced"; onAccount: () => void }) {
   return <header className="topbar"><button className="brand" onClick={() => navigate("home")} aria-label="QazaqType басты беті"><span>Q</span>azaqType</button>
     <nav>{([['home','Басты бет'],['lessons','Сабақтар'],['trainer','Тренажёр'],['speed','Сынақ'],['results','Нәтижелер']] as [View,string][]).map(([id,label]) => <button key={id} onClick={() => navigate(id)} className={view === id ? "nav-active" : ""}>{label}</button>)}</nav>
-    <div className="header-actions"><span className={`cloud-dot ${cloudState}`} title={cloudState === "synced" ? "Прогресс бұлтта сақталды" : cloudState === "syncing" ? "Сақталуда" : "Осы құрылғыда сақталады"}/><span className="layout-badge">KZ</span><button className={`account-button ${view === "account" ? "active" : ""}`} onClick={onAccount}><i>{profile?.full_name?.[0]?.toUpperCase() || (user ? "Q" : "↗")}</i><span>{profile?.full_name || "Кіру"}</span></button></div>
+    <div className="header-actions"><span className={`cloud-dot ${cloudState}`} title={cloudState === "synced" ? "Прогресс бұлтта сақталды" : cloudState === "syncing" ? "Сақталуда" : "Осы құрылғыда сақталады"}/><span className="layout-badge">KZ</span><button className={`account-button ${view === "account" ? "active" : ""}`} onClick={onAccount}><i>{String(user?.user_metadata.avatar_emoji || profile?.full_name?.[0]?.toUpperCase() || (user ? "Q" : "↗"))}</i><span>{profile?.full_name || "Кіру"}</span></button></div>
   </header>;
 }
 
@@ -185,8 +207,9 @@ function Trainer({ exercise, onComplete, onChooseAbai, onLessons }: { exercise: 
   useEffect(()=>{const down=(e:KeyboardEvent)=>{if(e.key==="Shift"){setShiftHeld(true);return}if(e.key==="Escape"){reset();return}if(e.key.length===1){e.preventDefault();press(e.key)}};const up=(e:KeyboardEvent)=>{if(e.key==="Shift")setShiftHeld(false)};window.addEventListener("keydown",down);window.addEventListener("keyup",up);return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up)}},[press,reset]);
   useEffect(()=>{if(!running)return;const id=window.setInterval(()=>setSeconds(v=>v+1),1000);return()=>clearInterval(id)},[running]);
   const accuracy=typed?Math.max(0,Math.round(((typed-errors)/typed)*100)):100, cpm=seconds?Math.round(index/seconds*60):0, progress=Math.min(100,index/target.length*100);
-  return <section className="workspace trainer-page"><div className="trainer-crumb"><button onClick={onLessons}>← Сабақтар</button><span>/</span><span>{exercise.lessonId ? "Жаттығу" : "Абайдың қара сөздері"}</span></div>
-    <div className="lesson-head"><div><p className="eyebrow">{exercise.lessonId ? "ҚАЗАҚ ПЕРНЕТАҚТАСЫ · САБАҚ" : "КӨРКЕМ МӘТІН · АБАЙ ҚҰНАНБАЙҰЛЫ"}</p><h1>{exercise.title}</h1></div><div className="timer"><span>УАҚЫТ</span><strong>{formatTime(seconds)}</strong></div></div>
+  const customExercise = exercise.title.startsWith("✎");
+  return <section className="workspace trainer-page"><div className="trainer-crumb"><button onClick={onLessons}>← Сабақтар</button><span>/</span><span>{customExercise ? "Мұғалім тапсырмасы" : exercise.lessonId ? "Жаттығу" : "Абайдың қара сөздері"}</span></div>
+    <div className="lesson-head"><div><p className="eyebrow">{customExercise ? "ЖЕКЕ МӘТІН · СЫНЫП ТАПСЫРМАСЫ" : exercise.lessonId ? "ҚАЗАҚ ПЕРНЕТАҚТАСЫ · САБАҚ" : "КӨРКЕМ МӘТІН · АБАЙ ҚҰНАНБАЙҰЛЫ"}</p><h1>{customExercise ? "Мұғалімнің жеке мәтіні" : exercise.title}</h1></div><div className="timer"><span>УАҚЫТ</span><strong>{formatTime(seconds)}</strong></div></div>
     {!exercise.lessonId && <div className="abai-tabs">{abaiTexts.map((t,i)=><button className={exercise.abaiIndex===i?"selected":""} onClick={()=>onChooseAbai(i)} key={t.title}>{i+1}-мәтін</button>)}</div>}
     <div className="stats-row"><div><span>Жылдамдық</span><strong>{cpm}</strong><small>таң/мин</small></div><div><span>Дәлдік</span><strong>{accuracy}</strong><small>%</small></div><div><span>Қате</span><strong>{errors}</strong><small>рет</small></div><div className="live-progress"><span>{Math.round(progress)}% орындалды</span><i><b style={{width:`${progress}%`}}/></i></div></div>
     <section className={`type-card expanded ${wrong?"shake":""}`}><div className="progress" style={{width:`${progress}%`}}/><div className="text-line"><span className="done">{target.slice(0,index)}</span><span className="current">{target[index]}</span><span className="pending">{target.slice(index+1)}</span></div><p><kbd>Esc</kbd> қайта бастау · қазақ раскладкасын қосып, мәтінді теріңіз</p></section>
@@ -220,12 +243,14 @@ function Results({history,completed,onPractice,onWeakPractice}:{history:ResultRe
   const chart=[...history].slice(0,10).reverse(), max=Math.max(100,...chart.map(r=>r.cpm));
   const mistakeTotals=history.reduce<Record<string,number>>((all,r)=>{Object.entries(r.mistakeKeys||{}).forEach(([key,count])=>all[key]=(all[key]||0)+count);return all},{}), weakLetters=Object.entries(mistakeTotals).filter(([key])=>key.trim()).sort((a,b)=>b[1]-a[1]).slice(0,6);
   const dayKeys=[...new Set(history.map(r=>new Date(r.date).toLocaleDateString("en-CA")))], today=new Date(); let streak=0; for(let i=0;i<60;i++){const d=new Date(today);d.setDate(today.getDate()-i);if(dayKeys.includes(d.toLocaleDateString("en-CA")))streak++;else if(i>0||dayKeys.length)break;}
+  const xp=history.reduce((sum,result)=>sum+Math.max(25,Math.round(result.seconds/6+result.accuracy+Math.min(result.cpm,220)/3)),0), level=Math.floor(xp/500)+1, levelProgress=xp%500;
   return <section className="results-page page-width"><div className="results-head"><div><p className="eyebrow">ЖЕКЕ ПРОГРЕСС</p><h1>Нәтижелер</h1><p>Әр жаттығудан кейінгі көрсеткіштеріңіз осы құрылғыда сақталады.</p></div><button className="cta" onClick={onPractice}>Жаттығуды жалғастыру →</button></div>
+    <section className="results-level"><div><span>ДЕҢГЕЙ {level}</span><b>{xp} XP</b></div><div><i style={{width:`${levelProgress/5}%`}}/></div><p>Келесі деңгейге <b>{500-levelProgress} XP</b> қалды · әр дәл әрі жылдам жаттығу көбірек XP береді</p></section>
     <div className="summary-grid"><article><span>ЖЕКЕ РЕКОРД</span><b>{best}</b><small>таңба / минут</small><i>↗</i></article><article><span>ОРТАША ДӘЛДІК</span><b>{average}%</b><small>{history.length} жаттығу бойынша</small><i>◎</i></article><article><span>ЖАТТЫҒУ УАҚЫТЫ</span><b>{minutes}</b><small>минут барлығы</small><i>◷</i></article><article><span>АЯҚТАЛҒАН САБАҚ</span><b>{completed.length}<em>/{totalLessonCount}</em></b><small>оқу бағдарламасы</small><i>✓</i></article></div>
     <div className="results-layout"><section className="chart-card"><div className="panel-title"><div><h2>Жылдамдық динамикасы</h2><p>Соңғы 10 жаттығу · таңба/минут</p></div><span>{chart.length ? `+${Math.max(0,chart[chart.length-1].cpm-(chart[0]?.cpm||0))}` : "—"}</span></div>{chart.length?<div className="bar-chart">{chart.map((r,i)=><div className="chart-column" key={r.id}><b>{r.cpm}</b><i style={{height:`${Math.max(8,r.cpm/max*100)}%`}} className={i===chart.length-1?"latest":""}/><small>{i+1}</small></div>)}</div>:<EmptyState onPractice={onPractice}/>}</section>
       <section className="goal-card"><p className="eyebrow">КЕЛЕСІ МАҚСАТ</p><h2>{best<150?"150 таңба/мин":"95% дәлдік"}</h2><p>{best<150?"Жылдамдықты тұрақты ырғақпен арттырыңыз.":"Жылдамдықты сақтап, қателерді азайтыңыз."}</p><div className="goal-track"><i style={{width:`${best<150?Math.min(100,best/150*100):Math.min(100,average/95*100)}%`}}/></div><span>{best<150?`${best} / 150 таң/мин`:`${average}% / 95%`}</span><button onClick={onPractice}>Сабақты таңдау</button></section></div>
     <div className="insight-grid"><section className="weak-card"><div className="panel-title"><div><h2>Қиын әріптер</h2><p>Ең көп қате жіберілген пернелер</p></div></div>{weakLetters.length?<><div className="weak-list">{weakLetters.map(([letter,count],i)=><div key={letter}><b>{letter.toUpperCase()}</b><span><i style={{width:`${Math.max(12,count/weakLetters[0][1]*100)}%`}}/></span><small>{count} қате</small></div>)}</div><button onClick={()=>onWeakPractice(weakLetters.map(([letter])=>letter))}>Осы әріптерді жаттықтыру →</button></>:<div className="mini-empty">Жаттығуды аяқтаңыз — қиын әріптер осы жерде пайда болады.</div>}</section>
-      <section className="achievements-card"><div className="panel-title"><div><h2>Жетістіктер</h2><p>Сіздің жаңа белестеріңіз</p></div><span className="streak-badge">🔥 {streak} күн</span></div><div className="badge-grid"><div className={history.length>=1?"earned":""}><i>✦</i><b>Алғашқы қадам</b><small>1 жаттығу</small></div><div className={best>=150?"earned":""}><i>↗</i><b>Жылдам теруші</b><small>150 таң/мин</small></div><div className={average>=95&&history.length>0?"earned":""}><i>◎</i><b>Мінсіз дәлдік</b><small>Орташа 95%</small></div><div className={completed.length>=totalLessonCount?"earned":""}><i>★</i><b>Шебер</b><small>{totalLessonCount} сабақ</small></div></div></section></div>
+      <section className="achievements-card"><div className="panel-title"><div><h2>Жетістіктер</h2><p>Сіздің жаңа белестеріңіз</p></div><span className="streak-badge">🔥 {streak} күн</span></div><div className="badge-grid extended"><div className={history.length>=1?"earned":""}><i>✦</i><b>Алғашқы қадам</b><small>1 жаттығу</small></div><div className={best>=150?"earned":""}><i>↗</i><b>Жылдам теруші</b><small>150 таң/мин</small></div><div className={average>=95&&history.length>0?"earned":""}><i>◎</i><b>Мінсіз дәлдік</b><small>Орташа 95%</small></div><div className={streak>=3?"earned":""}><i>🔥</i><b>Тұрақты қадам</b><small>3 күн қатарынан</small></div><div className={history.length>=10?"earned":""}><i>10</i><b>Ондық белес</b><small>10 жаттығу</small></div><div className={completed.length>=16?"earned":""}><i>½</i><b>Жарты жол</b><small>16 сабақ</small></div><div className={xp>=1000?"earned":""}><i>XP</i><b>Тәжірибелі</b><small>1000 XP</small></div><div className={completed.length>=totalLessonCount?"earned":""}><i>★</i><b>Шебер</b><small>{totalLessonCount} сабақ</small></div></div></section></div>
     <section className="history-card"><div className="panel-title"><div><h2>Соңғы жаттығулар</h2><p>Сіздің теру тарихыңыз</p></div></div>{history.length?<div className="history-table"><div className="history-row header"><span>Жаттығу</span><span>Күні</span><span>Уақыт</span><span>Жылдамдық</span><span>Дәлдік</span></div>{history.slice(0,8).map(r=><div className="history-row" key={r.id}><span><i>{r.lessonId?"S":"A"}</i><b>{r.title}</b></span><span>{new Intl.DateTimeFormat("kk-KZ",{day:"2-digit",month:"short"}).format(new Date(r.date))}</span><span>{formatTime(r.seconds)}</span><span><b>{r.cpm}</b> таң/мин</span><span className={r.accuracy>=90?"good":"warn"}>{r.accuracy}%</span></div>)}</div>:<EmptyState onPractice={onPractice}/>}</section>
   </section>
 }
